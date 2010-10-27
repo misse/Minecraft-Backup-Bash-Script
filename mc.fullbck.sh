@@ -45,10 +45,10 @@
 #########################################################################
 
 #Minecraft properties
-MINECRAFTDIR=/home/nahaz/minecraft-hey0
-MINECRAFTSRV=Minecraft_Mod.jar
-JXMS=512M
-JXMX=2048M
+MINECRAFTDIR=
+MINECRAFTSRV=
+JXMS=
+JXMX=
 GUI=nogui
 WORLDNAME=world
 SCREEN=mc
@@ -57,9 +57,9 @@ TIME=30
 MSG="Server restarting in "$TIME" seconds, back in a minute!"
 TRIES=3
 #Backup vars
-TMPDIR=/tmp
-BCKSRV=srvtux03
-BCKDIR=/share/ds-1/backup/minecraft
+TMPDIR=
+BCKSRV=
+BCKDIR=
 #no need to change these
 TIMESTAMP=$(date +%y%m%d.%T)
 LOGSTAMP=$(date +%y%m%d\ %T)
