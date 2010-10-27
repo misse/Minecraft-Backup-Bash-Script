@@ -1,1 +1,46 @@
-The script is thoroughly commented and should give enough instructions on how to use it.
+This is the explanatory comments from the script. Please refer to the script for the latest version as this one is most likely not updated as quickly.
+
+#########################################################################
+# Backup script for minecraft servers with SCP to another site.		#
+# Stops and starts specified minecraft server for 100% backups.		#
+# Supports multiple minecraft servers on the same machine		#
+#									#
+# Author								#
+# Pierre Christoffersen, www.nahaz.se					#
+# Feel free to redistribute, change or improve, but leave original	#
+# authors and contributers in comments.					#
+#									#
+# Exitcodes:								#
+# 0=Completed with no errors						#
+# 1=Backupd done, server not restarted					#
+# 2=Failed								#
+# 									#
+# Variables used:							#
+#									#
+# Minecraft-server related:						#
+# MINECRAFTDIR=/Dir/to/minecraft/server					#
+# MINECRAFTSRV=Name of server.jar used					#
+# JXMS=512M #Amount of minimum ram for JVM 				#
+# JXMX=3072M #Amount of maximum ram for JVM				#
+# GUI=nogui #nogui, don't change, only a var for future purposes	#
+# WORLDNAME=Name of minecraft world					#
+# SCREEN=Screen name minecraft server is running in			#
+#									#
+# Server restart/stop timer and message					#
+# TIME=60 #Countdown in seconds to shutdown server			#
+# MSG="Server restarting in "$TIME" seconds, back in a minute!"		#
+# TRIES=3 #Number of tries to start/stop server before giving up	#
+#									#
+# Temporary directory and remote site for backup			#
+# TMPDIR=/dir/to/tmp							#
+# BCKSRV=HOSTNAME #Hostname of backupserver				#
+# BCKDIR=/dir/on/backupserver/to/store/in				#
+#									#
+# Don't change these unless you understand what you're doing		#
+# LOG=$TMP/mc.$WORLDNAME.fullbck.log					#
+# OF=/tmp/$FILE								#
+# BUDIR=$MINECRAFTDIR/$WORLDNAME					#
+# FILE=$WORLDNAME.$TIMESTAMP.fullbck.tar.gz				#
+# TIMESTAMP=$(date +%y%m%d.%T)						#
+# LOGSTAMP=$(date +%y%m%d\ %T)						#
+#########################################################################
