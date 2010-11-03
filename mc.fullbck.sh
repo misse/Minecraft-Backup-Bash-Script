@@ -18,8 +18,8 @@
 # Variables used:							#
 #									#
 # Minecraft-server related:						#
-# MINECRAFTDIR=/Dir/to/minecraft/server					#
-# MINECRAFTSRV=Name of server.jar used					#
+# MCDIR=/Dir/to/minecraft/server					#
+# MCSRV=Name of server.jar used						#
 # JXMS=512M #Amount of minimum ram for JVM 				#
 # JXMX=3072M #Amount of maximum ram for JVM				#
 # GUI=nogui #nogui, don't change, only a var for future purposes	#
@@ -39,33 +39,37 @@
 # Don't change these unless you understand what you're doing		#
 # LOG=$TMP/mc.$WORLDNAME.fullbck.log					#
 # OF=/tmp/$FILE								#
-# BUDIR=$MINECRAFTDIR/$WORLDNAME					#
+# BUDIR=$MCDIR/$WORLDNAME						#
 # FILE=$WORLDNAME.$TIMESTAMP.fullbck.tar.gz				#
 # TIMESTAMP=$(date +%y%m%d.%T)						#
 # LOGSTAMP=$(date +%y%m%d\ %T)						#
 #########################################################################
 
 #Minecraft properties
-MINECRAFTDIR=
-MINECRAFTSRV=
+MCDIR=
+MCSRV=
 JXMS=
 JXMX=
 GUI=nogui
 WORLDNAME=world
 SCREEN=mc
+
 #Restart properties
 TIME=30
 MSG="Server restarting in "$TIME" seconds, back in a minute!"
 TRIES=3
+
 #Backup vars
 TMPDIR=
 BCKSRV=
 BCKDIR=
+
 #no need to change these
 TIMESTAMP=$(date +%y%m%d.%T)
 LOGSTAMP=$(date +%y%m%d\ %T)
-LOG=$TMPDIR/mc.$WORLDNAME.fullbck.log
-BUDIR=$MINECRAFTDIR/$WORLDNAME
+
+LOGFILE=$TMPDIR/mc.$WORLDNAME.fullbck.log
+BUDIR=$MCDIR/$WORLDNAME
 FILE=$WORLDNAME.$TIMESTAMP.fullbck.tar.gz
 OF=$TMPDIR/$FILE
 
@@ -73,7 +77,11 @@ OF=$TMPDIR/$FILE
 
 #Check if minecraft server is running, ONLINE == 1 if offline, ONLINE == 2 if running
 function srv_check () {
-	ONLINE=$(ps aux | grep "java -Xms$JXMS -Xmx$JXMX -jar $MINECRAFTSRV $GUI" | wc -l)
+	ONLINE=$(ps aux | grep "java -Xms$JXMS -Xmx$JXMX -jar $MCSRV $GUI" | wc -l)
+}
+
+function log () {
+	echo "[${LOGSTAMP}] ${@}" >> $LOGFILE
 }
 
 #Kill minecraft server, but post $MSG to server $TIME before shutdown and warn 5 seconds before shutdown. If "stop" don't work, kill $PID.
@@ -84,45 +92,45 @@ function kill_mc() {
 	screen -S $SCREEN -p 0 -X stuff "`printf "stop\r"`"; sleep 5
 	srv_check
 	if [ $ONLINE == 1 ]; then
-		echo $LOGSTAMP": Minecraft server shutdown successfully">> $LOG
+		log "Minecraft server shutdown successfully."
 	else
-		echo $LOGSTAMP": Minecraft server did NOT shutdown, will try with force">> $LOG
-		local PID=$(ps -e | grep "java -Xms$JXMS -Xmx$JXMX -jar $MINECRAFTSRV $GUI" | grep -v grep | awk '{print $1;}')
+		log "Minecraft server did NOT shutdown, will try with force."
+		local PID=$(ps -e | grep "java -Xms$JXMS -Xmx$JXMX -jar $MCSRV $GUI" | grep -v grep | awk '{print $1;}')
 		local STOP=$TRIES
 		while [[ $STOP -gt 0 && $ONLINE == 2 ]]; do
-			echo $LOGSTAMP": Try #"$STOP" of stopping minecraft server">> $LOG
+			log "Try #${STOP} of stopping minecraft server."
 			kill $PID
 			srv_check
 			STOP=$(($STOP-1))
 		done
 		if [ $STOP == 0 ]; then
-			echo $LOGSTAMP": Could not kill minecraft server, exiting">> $LOG
+			log "Could not kill minecraft server, exiting"
 			exit 2
 		else
-			echo $LOSTAMP": Killed minecraft server after "$STOP" number of tries, proceeding with full backup">> $LOG
+			log "Killed minecraft server after ${STOP} number of tries, proceeding with full backup."
 		fi
 	fi
 }
 #Start minecraft server with $PARAMS
 function start_mc() {
 	function java_start() {
-		screen -S $SCREEN -p 0 -X stuff "`printf "cd $MINECRAFTDIR\r"`"; sleep 1
-		screen -S $SCREEN -p 0 -X stuff "`printf "java -Xms$JXMS -Xmx$JXMX -jar $MINECRAFTSRV $GUI\r"`"; sleep 3
+		screen -S $SCREEN -p 0 -X stuff "`printf "cd $MCDIR\r"`"; sleep 1
+		screen -S $SCREEN -p 0 -X stuff "`printf "java -Xms$JXMS -Xmx$JXMX -jar $MCSRV $GUI\r"`"; sleep 3
 	}
-	local PARAMS="screen -dmS $SCREEN java -Xms$JXMS -Xmx$JXMX -jar $MINECRAFTSRV $GUI"
+	local PARAMS="screen -dmS $SCREEN java -Xms$JXMS -Xmx$JXMX -jar $MCSRV $GUI"
 	java_start
 	srv_check
 	if [ $ONLINE == 2 ]; then
-		echo $LOGSTAMP": Server started successfully with "$PARAMS>> $LOG
+		log "Server started successfully with ${PARAMS}."
 	else
-		echo $LOGSTAMP": Server did not start, trying again.">> $LOG
+		log "Server did not start, trying again."
 		local START=0
 		local SCREXIST=$(ps aux | grep "SCREEN -dmS $SCREEN" | wc -l)
 		while [[ $START -lt 3 && $ONLINE == 1 ]]; do
-			echo $LOGSTAMP": Try #"$START" of starting minecraft server">> $LOG
+			log "Try #"$START" of starting minecraft server."
 			SCREXIST=$(ps aux | grep "SCREEN -dmS $SCREEN" | wc -l)
 			if [ $SCREXIST == 1 ]; then
-				echo $LOGSTAMP": Screen session not found, starting screen with -dmS "$SCREEN>> $LOG
+				log "Screen session not found, starting screen with -dmS ${SCREEN}."
 				screen -dmS $SCREEN; sleep 1
 				java_start
 			else
@@ -132,11 +140,11 @@ function start_mc() {
 			START=$(($START+1))
 		done
 		if [ $START == 3 ]; then
-			echo $LOGSTAMP": Server did not start after "$START" number of tries, exiting">> $LOG
+			log "Server did not start after ${START} number of tries, exiting."
 			exit 1
 		else
-			echo $LOGSTAMP": Server started after "$START" number of tries with "$PARAMS>> $LOG
-			echo $LOGSTAMP": Backup complete">> $LOG
+			log "Server started after ${START} number of tries with ${PARAMS}"
+			log "Backup complete."
 			exit 0
 		fi
 	fi
@@ -145,26 +153,26 @@ function run_backup() {
 #Backup dir, output to $LOG
 tar -czf $OF $BUDIR
 if [ $? == 0 ]; then
-	echo $LOGSTAMP": TAR of "$BUDIR" to "$OF" was successful">> $LOG
+	log "TAR of ${BUDIR} to ${OF} was successful."
 elif [ $? == 1 ]; then
-	echo $LOGSTAMP": TAR of "$BUDIR" to "$OF" was successful, but backup is not 100% of "$BUDIR", most likely because it was changed during reading">> $LOG
+	log "TAR of ${BUDIR} to ${OF} was successful, but backup is not 100% of ${BUDIR}, most likely because it was changed during reading."
 else
-	echo $LOGSTAMP": TAR of "$BUDIR" to "$OF" was NOT successful, reason: "$?" FATAL ERROR">> $LOG
+	log "TAR of ${BUDIR} to ${OF} was NOT successful, reason: ${?} FATAL ERROR."
 fi
 #SCP backup to $BCKSRV, output to $LOG
 scp $OF $BCKSRV:$BCKDIR
 if [ $? == 0 ]; then
-	echo $LOGSTAMP": SCP of "$OF" to "$BCKSRV" was successful">> $LOG
+	log "SCP of ${OF} to ${BCKSRV} was successful."
 else
-	echo $LOGSTAMP": SCP of "$OF" to "$BCKSRV" was NOT successful, reason: "$?":Some error ocurred">> $LOG
+	log "SCP of ${OF} to ${BCKSRV} was NOT successful, reason: ${?}:Some error ocurred."
 fi
 
-echo $LOGSTAMP": Proceeding to start server...">> $LOG
+log "Proceeding to start server..."
 start_mc
 }
 
 #Is minecraft server running? yes - stop then continue, no - continue
-echo $LOGSTAMP": Beginning full backup of "$BUDIR>> $LOG
+log "Beginning full backup of ${BUDIR}"
 srv_check
 if [ $ONLINE == 2 ]; then
 	kill_mc
