@@ -173,12 +173,37 @@ start_mc
 
 #Is minecraft server running? yes - stop then continue, no - continue
 log "Beginning full backup of ${BUDIR}"
-srv_check
-if [ $ONLINE == 2 ]; then
-	kill_mc
-	if [ $ONLINE == 1 ]; then
-		run_backup
-	fi
-else
-	run_backup
-fi
+case "$1" in
+	backup)
+		srv_check
+		if [ $ONLINE == 2 ]; then
+			kill_mc
+		if [ $ONLINE == 1 ]; then
+			run_backup
+		fi
+		else
+			run_backup
+		fi
+	;;
+	restart)
+		srv_check
+		if [ $ONLINE == 2 ]; then
+			kill_mc
+		fi
+		start_mc
+	;;
+	stop)
+		kill_mc
+	;;
+	start)
+		start_mc
+	;;
+	status)
+		srv_check
+		if [ $ONLINE == 2 ]; then
+			echo "Server is running"
+ 		if [ $ONLINE == 1 ]; then
+			echo "Server is not running"
+		fi
+	;;
+esac
