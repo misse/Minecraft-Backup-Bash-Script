@@ -202,7 +202,7 @@ case "$1" in
 		srv_check
 		if [ $ONLINE == 2 ]; then
 			echo "Server is running"
-    elif [ $ONLINE == 1 ]; then
+		elif [ $ONLINE == 1 ]; then
 			echo "Server is not running"
 		fi
 	;;
